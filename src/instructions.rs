@@ -17,17 +17,33 @@ pub enum Instruction {
 }
 
 impl Instruction {
-    pub fn condition_holds(&self, memory: &Memory) -> bool {
+    fn condition_holds(&self, memory: &Memory) -> bool {
         match self {
             Instruction::ConditionalJump {left_operand, relation, right_operand, ..} => relation.holds(left_operand.evaluate(memory), right_operand.evaluate(memory)),
             _ => false
         }
     }
     
-    pub fn evaluate_aritmetic_value(&self, memory: &Memory) -> i32 {
+    fn evaluate_aritmetic_value(&self, memory: &Memory) -> i32 {
         match self {
             Instruction::Arithmetic {left_operand, operator, right_operand, ..} => operator.apply(left_operand.evaluate(memory), right_operand.evaluate(memory)),
             _ => 0
+        }
+    }
+
+    pub fn execute(&self, memory: &mut Memory) -> Option<u32> {
+        match self {
+            Instruction::ConditionalJump { target, .. } => {
+                if self.condition_holds(memory) {
+                    Some(*target)
+                } else {
+                    None
+                }
+            },
+            Instruction::Arithmetic { target_register, .. } => {
+                memory.set(target_register.resolve_address(memory), self.evaluate_aritmetic_value(memory));
+                None
+            }
         }
     }
 }
@@ -75,17 +91,23 @@ impl Relation {
 }
 
 #[derive(Debug, PartialEq)]
-pub enum Address {
-    Raw(u32),
+pub enum Register {
+    Address(u32),
     Register(Box<Register>)
 }
 
-impl Address {
+impl Register {
     fn resolve_address(&self, memory: &Memory) -> u32 {
         match &self {
-            Address::Raw(addr)     => *addr,
-            Address::Register(reg) => reg.evaluate(memory) as u32
+            Register::Address(addr) => *addr,
+            Register::Register(reg) => memory.get(reg.resolve_address(memory)) as u32
         }
+    }
+}
+
+impl Evaluable for Register {
+    fn evaluate(&self, memory: &Memory) -> i32 {
+        memory.get(self.resolve_address(memory))
     }
 }
 
@@ -104,23 +126,12 @@ impl Evaluable for Operand {
     }
 }
 
-#[derive(Debug, PartialEq)]
-pub struct Register {
-    pub address: Address
-}
-
-impl Evaluable for Register {
-    fn evaluate(&self, memory: &Memory) -> i32 {
-        memory.get(self.address.resolve_address(memory))
-    }
-}
-
 pub struct Memory {
     memory: HashMap<u32, i32>
 }
 
 impl Memory {
-    fn get(&self, address: u32) -> i32 {
+    pub fn get(&self, address: u32) -> i32 {
         *self.memory.get(&address).expect(&format!("The memory cell at {} has not been initialized!", address))
     }
     

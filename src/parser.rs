@@ -4,12 +4,14 @@ use nom::{
 
 use crate::instructions::*;
 
-named!(pub arithm_instruction<&str, Instruction>, map!(
+named!(pub instruction<&str, Instruction> alt!(arithm_instruction | conditional_jump));
+
+named!(arithm_instruction<&str, Instruction>, map!(
     tuple!(terminated!(register, tag!(":=")), operand, operator, operand),
     |(target, left, op, right)| Instruction::Arithmetic { target_register: target, left_operand: Box::new(left), operator: op, right_operand: Box::new(right) }
 ));
 
-named!(pub conditional_jump<&str, Instruction>, map!(
+named!(conditional_jump<&str, Instruction>, map!(
     tuple!(preceded!(tag!("if"), operand), relation, terminated!(operand, tag!("goto")), uint),
     |(left, rel, right, target)| Instruction::ConditionalJump { left_operand: Box::new(left), relation: rel, right_operand: Box::new(right), target }
 ));

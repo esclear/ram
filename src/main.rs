@@ -4,20 +4,23 @@ extern crate nom;
 mod instructions;
 mod parser;
 
-use instructions::{Memory, Instruction};
+use instructions::Memory;
 
 fn main() {
-    let parsed = parser::arithm_instruction("R[2]:=1*R[R[1]];");
-    // let parsed = parser::conditional_jump("ifR[R[1]]<R[2]goto123;");
+    let (_, foo) = parser::instruction("R[1]:=42+0;").unwrap();
+    let (_, bar) = parser::instruction("R[1]:=R[1]/2;").unwrap();
+    let (_, baz) = parser::instruction("R[R[1]]:=1337+0;").unwrap();
 
-    println!("{:?}", parsed);
-    
-    let instruction: Instruction = parsed.unwrap().1;
-    
     let mut mem = Memory::new();
-    
-    mem.set(1, 2);
-    mem.set(2, 42);
-    
-    println!("Value: {}", instruction.evaluate_aritmetic_value(&mem));
+
+    foo.execute(&mut mem);
+    println!("Value: {}", mem.get(1));
+
+    bar.execute(&mut mem);
+    println!("Value: {}", mem.get(1));
+
+    baz.execute(&mut mem);
+    println!("Value: {}", mem.get(1));
+    println!("Value: {}", mem.get(21));
+
 }

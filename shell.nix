@@ -5,10 +5,11 @@ pkgs.mkShell {
 	gcc
 	binutils
 	gnumake
+
 	rustup
 	openssl
+	pkgconfig
 	
-	sass
 	nodejs
   ];
 

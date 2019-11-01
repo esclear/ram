@@ -4,7 +4,7 @@ use nom::{
 
 use crate::instructions::*;
 
-named!(pub instruction<&str, Instruction> alt!(arithm_instruction | conditional_jump));
+named!(pub instruction<&str, Instruction>, alt!(arithm_instruction | conditional_jump));
 
 named!(arithm_instruction<&str, Instruction>, map!(
     tuple!(terminated!(register, tag!(":=")), operand, operator, operand),

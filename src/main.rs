@@ -33,6 +33,9 @@ fn main() {
         parser.refer(&mut options.print_memory)
             .add_option(&["-M", "--print-memory"], StoreTrue, "Print the memory as it was parsed");
 
+        parser.refer(&mut options.debug)
+            .add_option(&["-d", "--debug"], StoreTrue, "Print debug output (current instructoin and memory) for every executed instruction");
+
         parser.refer(&mut options.maximum_steps)
             .add_option(&["-s", "--maximum-steps"], StoreOption, "Maximum number of executed instructions");
         parser.refer(&mut options.run)
@@ -103,6 +106,7 @@ fn main() {
     if let Some(steps) = options.maximum_steps {
         machine.set_remaining_steps(steps);
     }
+    machine.set_debug(options.debug);
 
     if options.run {
         if options.verbose {
@@ -123,6 +127,7 @@ fn main() {
 struct Options {
     program: String,
     verbose: bool,
+    debug: bool,
     memory: Option<String>,
     run: bool,
     print_program: bool,
@@ -135,6 +140,7 @@ impl Options {
         Options {
             program: "".to_string(),
             verbose: false,
+            debug: false,
             memory: None,
             run: true,
             print_program: false,

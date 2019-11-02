@@ -2,17 +2,19 @@ use std::collections::HashMap;
 
 use crate::instructions::Instruction;
 use crate::parser;
+use crate::utils;
 
 pub struct Machine {
     program_counter: u32,
     program: Vec<Instruction>,
     memory: Memory,
-    steps_remaining: Option<u32>
+    steps_remaining: Option<u32>,
+    debug_output: bool
 }
 
 impl Machine {
     pub fn new() -> Machine {
-        Machine { program_counter: 0, program: Vec::new(), memory: Memory::new(), steps_remaining: None }
+        Machine { program_counter: 0, program: Vec::new(), memory: Memory::new(), steps_remaining: None, debug_output: false }
     }
 
     pub fn load_program(&mut self, program: Vec<Instruction>) {
@@ -21,6 +23,12 @@ impl Machine {
 
     pub fn step(&mut self) -> bool {
         if let Some(instruction) = self.program.get(self.program_counter as usize) {
+            if self.debug_output {
+                println!("pc @ {:4} : {}", self.program_counter, instruction);
+                println!("Memory before instruction execution:");
+                utils::print_memory(self.get_memory());
+            }
+
             match instruction.execute(&mut self.memory) {
                 Some(instruction) => self.goto(instruction),
                 None => self.program_counter += 1
@@ -63,6 +71,10 @@ impl Machine {
 
     pub fn set_remaining_steps(&mut self, remaining_steps: u32) {
         self.steps_remaining = Some(remaining_steps);
+    }
+
+    pub fn set_debug(&mut self, debug: bool) {
+        self.debug_output = debug;
     }
 }
 

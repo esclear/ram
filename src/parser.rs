@@ -15,7 +15,7 @@ pub fn program(program: &str) -> Option<Vec<Instruction>> {
 
 named!(_program<&str, Vec<Instruction>>, preceded!(wso, many0!(instruction)));
 
-named!(pub instruction<&str, Instruction>, terminated!(alt!(arithm_instruction | conditional_jump), tuple!(char!(';'), wso)));
+named!(pub instruction<&str, Instruction>, terminated!(alt!(arithm_instruction | conditional_jump), tuple!(opt!(char!(';')), wso)));
 
 named!(arithm_instruction<&str, Instruction>, map!(
     tuple!(terminated!(register, tuple!(wso, tag!(":="), wso)), terminated!(operand, wso), terminated!(operator, wso), operand),

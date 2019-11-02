@@ -58,6 +58,8 @@ named!(operand<&str, Operand>, alt!(
     register => { |reg| Operand::Data(reg) }
 ));
 
+named!(pub memory_cell<&str, (u32, i32)>, map!(tuple!(wso, uint, wso, char!(':'), wso, int), |(_,a,_,_,_,d)| (a, d)));
+
 fn is_whitespace(c: char) -> bool {
     match c {
         ' ' | '\t' | '\r' | '\n' => true,

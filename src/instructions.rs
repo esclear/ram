@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use super::machine::Memory;
 
 #[derive(Debug, PartialEq)]
 pub enum Instruction {
@@ -123,24 +123,6 @@ impl Evaluable for Operand {
             Operand::Data(register) => register.evaluate(memory),
             Operand::Integer(value) => *value
         }
-    }
-}
-
-pub struct Memory {
-    memory: HashMap<u32, i32>
-}
-
-impl Memory {
-    pub fn get(&self, address: u32) -> i32 {
-        *self.memory.get(&address).expect(&format!("The memory cell at {} has not been initialized!", address))
-    }
-    
-    pub fn set(&mut self, address: u32, value: i32) {
-        self.memory.insert(address, value);
-    }
-    
-    pub fn new() -> Memory {
-        Memory { memory: HashMap::new() }
     }
 }
 

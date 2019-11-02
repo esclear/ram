@@ -4,15 +4,17 @@ use nom::{
 
 use crate::instructions::*;
 
-named!(pub instruction<&str, Instruction>, alt!(arithm_instruction | conditional_jump));
+named!(pub program<&str, Vec<Instruction>>, preceded!(wso, many0!(instruction)));
+
+named!(pub instruction<&str, Instruction>, terminated!(alt!(arithm_instruction | conditional_jump), tuple!(char!(';'), wso)));
 
 named!(arithm_instruction<&str, Instruction>, map!(
-    tuple!(terminated!(register, tag!(":=")), operand, operator, operand),
+    tuple!(terminated!(register, tuple!(wso, tag!(":="), wso)), terminated!(operand, wso), terminated!(operator, wso), operand),
     |(target, left, op, right)| Instruction::Arithmetic { target_register: target, left_operand: Box::new(left), operator: op, right_operand: Box::new(right) }
 ));
 
 named!(conditional_jump<&str, Instruction>, map!(
-    tuple!(preceded!(tag!("if"), operand), relation, terminated!(operand, tag!("goto")), uint),
+    tuple!(preceded!(pair!(tag!("if"), ws), operand), delimited!(ws, relation, ws), terminated!(operand, tuple!(ws, tag!("goto"), ws)), uint),
     |(left, rel, right, target)| Instruction::ConditionalJump { left_operand: Box::new(left), relation: rel, right_operand: Box::new(right), target }
 ));
 
@@ -46,3 +48,13 @@ named!(operand<&str, Operand>, alt!(
     int      => { |val| Operand::Integer(val) } |
     register => { |reg| Operand::Data(reg) }
 ));
+
+fn is_whitespace(c: char) -> bool {
+    match c {
+        ' ' | '\t' | '\r' | '\n' => true,
+        _ => false
+    }
+}
+
+named!(ws<&str, &str>, take_while1!(is_whitespace));
+named!(wso<&str, &str>, take_while!(is_whitespace));

@@ -1,4 +1,5 @@
 use super::machine::Memory;
+use std::fmt;
 
 #[derive(Debug, PartialEq)]
 pub enum Instruction {
@@ -24,7 +25,7 @@ impl Instruction {
         }
     }
     
-    fn evaluate_aritmetic_value(&self, memory: &Memory) -> i32 {
+    fn evaluate_arithmetic_value(&self, memory: &Memory) -> i32 {
         match self {
             Instruction::Arithmetic {left_operand, operator, right_operand, ..} => operator.apply(left_operand.evaluate(memory), right_operand.evaluate(memory)),
             _ => 0
@@ -41,7 +42,7 @@ impl Instruction {
                 }
             },
             Instruction::Arithmetic { target_register, .. } => {
-                memory.set(target_register.resolve_address(memory), self.evaluate_aritmetic_value(memory));
+                memory.set(target_register.resolve_address(memory), self.evaluate_arithmetic_value(memory));
                 None
             }
         }
@@ -53,16 +54,16 @@ pub enum Operator {
     Plus,
     Minus,
     Times,
-    Divides
+    Divide
 }
 
 impl Operator {
     fn apply(&self, a: i32, b: i32) -> i32 {
         match &self {
-            Operator::Plus    => a + b,
-            Operator::Minus   => a - b,
-            Operator::Times   => a * b,
-            Operator::Divides => a / b
+            Operator::Plus   => a + b,
+            Operator::Minus  => a - b,
+            Operator::Times  => a * b,
+            Operator::Divide => a / b
         }
     }
 }
@@ -128,4 +129,57 @@ impl Evaluable for Operand {
 
 pub trait Evaluable {
     fn evaluate(&self, memory: &Memory) -> i32;
+}
+
+impl fmt::Display for Instruction {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match &self {
+            Instruction::Arithmetic {target_register, left_operand, operator, right_operand}
+                => write!(f, "{} := {} {} {};", target_register, left_operand, operator, right_operand),
+            Instruction::ConditionalJump {left_operand, relation, right_operand, target}
+                => write!(f, "if {} {} {} goto {};", left_operand, relation, right_operand, target)
+        }
+    }
+}
+
+impl fmt::Display for Operand {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match &self {
+            Operand::Integer(value) => write!(f, "{}", value),
+            Operand::Data(register) => register.fmt(f)
+        }
+    }
+}
+
+impl fmt::Display for Register {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match &self {
+            Register::Address(address) => write!(f, "R[{}]", address),
+            Register::Register(register) => write!(f, "R[{}]", register)
+        }
+    }
+}
+
+impl fmt::Display for Operator {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match &self {
+            Operator::Plus => write!(f, "+"),
+            Operator::Minus => write!(f, "-"),
+            Operator::Times => write!(f, "*"),
+            Operator::Divide => write!(f, "/")
+        }
+    }
+}
+
+impl fmt::Display for Relation {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match &self {
+            Relation::Lt  => write!(f, "<"),
+            Relation::Leq => write!(f, "<="),
+            Relation::Gt  => write!(f, ">"),
+            Relation::Geq => write!(f, "<"),
+            Relation::Eq  => write!(f, "=="),
+            Relation::Neq => write!(f, "!="),
+        }
+    }
 }

@@ -4,7 +4,16 @@ use nom::{
 
 use crate::instructions::*;
 
-named!(pub program<&str, Vec<Instruction>>, preceded!(wso, many0!(instruction)));
+pub fn program(program: &str) -> Option<Vec<Instruction>> {
+    // As a hacky workaround for strange behaviour of nom, add a null byte to the end.
+    let mut program = String::from(program);
+    program.push('\0');
+
+    let instructions = _program(&program);
+    _program(&program).map(|(r, p)| if r.eq("\x00") { Some(p) } else { None }).unwrap_or_else(|_| None)
+}
+
+named!(_program<&str, Vec<Instruction>>, preceded!(wso, many0!(instruction)));
 
 named!(pub instruction<&str, Instruction>, terminated!(alt!(arithm_instruction | conditional_jump), tuple!(char!(';'), wso)));
 
@@ -32,8 +41,8 @@ named!(operator<&str, Operator>, alt!(
     tag!("+") => { |_| Operator::Plus  } |
     tag!("-") => { |_| Operator::Minus } |
     tag!("*") => { |_| Operator::Times } |
-    tag!("/") => { |_| Operator::Divides } |
-    tag!("div") => { |_| Operator::Divides }
+    tag!("/") => { |_| Operator::Divide } |
+    tag!("div") => { |_| Operator::Divide }
 ));
 named!(relation<&str, Relation>, alt!(
     tag!("<")  => { |_| Relation::Lt  } |
